@@ -14,18 +14,18 @@ process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 # If you run over many samples and you save the log, remember to reduce
 # the size of the output by prescaling the report of the event number
-process.MessageLogger.cerr.FwkReport.reportEvery = 5000
-process.MessageLogger.cerr.default.limit = 10
+#process.MessageLogger.cerr.FwkReport.reportEvery = 5000
+#process.MessageLogger.cerr.default.limit = 10
 
 process.options = cms.untracked.PSet(
-    wantSummary = cms.untracked.bool(False)
+    wantSummary = cms.untracked.bool(True)
 )
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag.globaltag = "106X_dataRun2_v27"
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(1000)
 )
 
 # /SingleMuon/Run2018*-12Nov2019_UL2018*/AOD
@@ -37,6 +37,22 @@ process.source = cms.Source("PoolSource",
          'file:63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root'
     )
 )
+
+#---------------------- Refitter -----------------------
+process.load("RecoVertex.BeamSpotProducer.BeamSpot_cff")
+process.load("RecoTracker.TrackProducer.TrackRefitters_cff")
+process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
+process.load("RecoTracker.MeasurementDet.MeasurementTrackerEventProducer_cfi")
+
+process.MeasurementTrackerEvent.pixelClusterProducer = ''
+process.MeasurementTrackerEvent.stripClusterProducer = ''
+process.MeasurementTrackerEvent.inactivePixelDetectorLabels = cms.VInputTag()
+process.MeasurementTrackerEvent.inactiveStripDetectorLabels = cms.VInputTag()
+
+process.TrackRefitter.src = 'globalMuons'
+process.TrackRefitter.TrajectoryInEvent = True
+process.TrackRefitter.NavigationSchool = ''
+process.TrackRefitter.TTRHBuilder = "WithAngleAndTemplate"
 
 process.stage = cms.EDAnalyzer('ntuple'
      , format_file       = cms.string('AOD')
@@ -79,6 +95,7 @@ process.stage = cms.EDAnalyzer('ntuple'
     , pfCand            = cms.InputTag("particleFlow", "", "RECO")
     , pfJet             = cms.InputTag("ak4PFJetsCHS", "", "RECO")
     , L1muon            = cms.InputTag("gmtStage2Digis","Muon","RECO")
+    , trajInputLabel    = cms.InputTag("TrackRefitter::HSCPAnalysis")
 )
 
 
@@ -88,11 +105,19 @@ process.TFileService = cms.Service("TFileService",
 
 process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff")
 
+# CMS Path
+process.TrackRefitter_step = cms.Path(
+  process.offlineBeamSpot*
+  process.MeasurementTrackerEvent*
+  process.TrackRefitter
+)
+
 process.HSCParticleProducer_step = cms.Path(process.HSCParticleProducerSeq)
 process.Ntuple_step = cms.Path(process.stage)
 process.endjob_step = cms.EndPath(process.endOfProcess)
 
 process.schedule = cms.Schedule(
+    process.TrackRefitter_step,
     process.HSCParticleProducer_step,
     process.Ntuple_step,
     process.endjob_step
