@@ -18,23 +18,28 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 #process.MessageLogger.cerr.default.limit = 10
 
 process.options = cms.untracked.PSet(
-    wantSummary = cms.untracked.bool(True)
+#    wantSummary = cms.untracked.bool(True),
+    SkipEvent = cms.untracked.vstring('MismatchedInputFiles'),
 )
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag.globaltag = "106X_dataRun2_v27"
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1000)
+    input = cms.untracked.int32(10)
 )
 
 # /SingleMuon/Run2018*-12Nov2019_UL2018*/AOD
 # /SingleMuon/Run2018D-12Nov2019_UL2018-v4/AOD
-#root://cmsxrootd.fnal.gov//store/data/Run2018D/SingleMuon/AOD/12Nov2019_UL2018-v4/100000/63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root
+#root://cms-xrd-global.cern.ch//store/data/Run2018D/SingleMuon/AOD/12Nov2019_UL2018-v4/100000/63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-         'file:63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root'
+#         'file:63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root'
+         'root://cms-xrd-global.cern.ch//store/data/Run2018D/SingleMuon/AOD/12Nov2019_UL2018-v4/100000/63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root'
+    ),
+    secondaryFileNames = cms.untracked.vstring(
+         'root://cms-xrd-global.cern.ch//store/data/Run2018D/SingleMuon/ALCARECO/SiPixelCalSingleMuon-ForPixelALCARECO_UL2018-v1/250000/EE812551-E563-5B44-B6AC-F8190A191ABF.root',
     )
 )
 
@@ -44,12 +49,14 @@ process.load("RecoTracker.TrackProducer.TrackRefitters_cff")
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 process.load("RecoTracker.MeasurementDet.MeasurementTrackerEventProducer_cfi")
 
-process.MeasurementTrackerEvent.pixelClusterProducer = ''
-process.MeasurementTrackerEvent.stripClusterProducer = ''
+process.MeasurementTrackerEvent.pixelClusterProducer = 'ALCARECOSiPixelCalSingleMuon'
+process.MeasurementTrackerEvent.stripClusterProducer = 'ALCARECOSiPixelCalSingleMuon'
 process.MeasurementTrackerEvent.inactivePixelDetectorLabels = cms.VInputTag()
 process.MeasurementTrackerEvent.inactiveStripDetectorLabels = cms.VInputTag()
 
-process.TrackRefitter.src = 'globalMuons'
+#process.TrackRefitter.src = cms.InputTag('globalMuons::RECO')
+process.TrackRefitter.src = 'ALCARECOSiPixelCalSingleMuon'
+#process.TrackRefitter.src = 'generalTracks'
 process.TrackRefitter.TrajectoryInEvent = True
 process.TrackRefitter.NavigationSchool = ''
 process.TrackRefitter.TTRHBuilder = "WithAngleAndTemplate"
@@ -95,7 +102,7 @@ process.stage = cms.EDAnalyzer('ntuple'
     , pfCand            = cms.InputTag("particleFlow", "", "RECO")
     , pfJet             = cms.InputTag("ak4PFJetsCHS", "", "RECO")
     , L1muon            = cms.InputTag("gmtStage2Digis","Muon","RECO")
-    , trajInputLabel    = cms.InputTag("TrackRefitter::HSCPAnalysis")
+    , trajInputLabel    = cms.untracked.InputTag('TrackRefitter::HSCPAnalysis')
 )
 
 

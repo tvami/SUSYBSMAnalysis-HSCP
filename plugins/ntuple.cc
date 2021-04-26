@@ -394,7 +394,7 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    m_doRecomputeMuTim  = iConfig.getParameter<bool>("doRecomputeMuTim");
    m_cscSegments       = consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("cscSegments"));
    m_dt4DSegments      = consumes<DTRecSegment4DCollection>(iConfig.getParameter<edm::InputTag>("dt4DSegments"));
-   m_trajTag           = consumes<TrajTrackAssociationCollection> (iConfig.getParameter<edm::InputTag>("trajInputLabel"));
+   m_trajTag           = consumes<TrajTrackAssociationCollection> (iConfig.getUntrackedParameter<edm::InputTag>("trajInputLabel"));
 
 
    if (m_doRecomputeMuTim) {
