@@ -1,0 +1,44 @@
+A fatal system signal has occurred: abort signal
+The following is the call stack containing the origin of the signal.
+
+Fri Apr 30 02:04:51 CEST 2021
+Thread 2 (Thread 0x7fe98971f700 (LWP 30037)):
+#0  0x00007fe99df3c1d9 in waitpid () from /lib64/libpthread.so.0
+#1  0x00007fe998be63b7 in edm::service::cmssw_stacktrace_fork() () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/pluginFWCoreServicesPlugins.so
+#2  0x00007fe998be6e7a in edm::service::InitRootHandlers::stacktraceHelperThread() () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/pluginFWCoreServicesPlugins.so
+#3  0x00007fe99e521ccf in execute_native_thread_routine () at ../../../../../libstdc++-v3/src/c++11/thread.cc:80
+#4  0x00007fe99df34ea5 in start_thread () from /lib64/libpthread.so.0
+#5  0x00007fe99dc5d9fd in clone () from /lib64/libc.so.6
+Thread 1 (Thread 0x7fe99c31d480 (LWP 29960)):
+#0  0x00007fe99dc52ccd in poll () from /lib64/libc.so.6
+#1  0x00007fe998be681f in full_read.constprop () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/pluginFWCoreServicesPlugins.so
+#2  0x00007fe998be6f5c in edm::service::InitRootHandlers::stacktraceFromThread() () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/pluginFWCoreServicesPlugins.so
+#3  0x00007fe998be7e39 in sig_dostack_then_abort () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/pluginFWCoreServicesPlugins.so
+#4  <signal handler called>
+#5  0x00007fe99db953d7 in raise () from /lib64/libc.so.6
+#6  0x00007fe99db96ac8 in abort () from /lib64/libc.so.6
+#7  0x00007fe99db8e1a6 in __assert_fail_base () from /lib64/libc.so.6
+#8  0x00007fe99db8e252 in __assert_fail () from /lib64/libc.so.6
+#9  0x00007fe9a0cede26 in edm::BranchIDListHelper::fixBranchListIndexes(std::vector<unsigned short, std::allocator<unsigned short> >&) const () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/libDataFormatsProvenance.so
+#10 0x00007fe97f3e6340 in edm::RootFile::fillEventHistory() () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/pluginIOPoolInput.so
+#11 0x00007fe97f3e66bb in edm::RootFile::readCurrentEvent(edm::EventPrincipal&) () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/pluginIOPoolInput.so
+#12 0x00007fe97f3e67e0 in edm::RootFile::readEvent(edm::EventPrincipal&) () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/pluginIOPoolInput.so
+#13 0x00007fe97f3be6ee in edm::PoolSource::readEvent_(edm::EventPrincipal&) () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/pluginIOPoolInput.so
+#14 0x00007fe9a0b1c6fb in decltype ({parm#1}()) edm::convertException::wrap<void edm::callWithTryCatchAndPrint<void>(std::function<void ()>, char const*, bool)::{lambda()#1}>(void edm::callWithTryCatchAndPrint<void>(std::function<void ()>, char const*, bool)::{lambda()#1}) () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/libFWCoreFramework.so
+#15 0x00007fe9a0b1c7fc in void edm::callWithTryCatchAndPrint<void>(std::function<void ()>, char const*, bool) () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/libFWCoreFramework.so
+#16 0x00007fe9a0b1a9e0 in edm::InputSource::readEvent(edm::EventPrincipal&, edm::StreamContext&) () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/libFWCoreFramework.so
+#17 0x00007fe9a0b264dc in edm::EventProcessor::readEvent(unsigned int) () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/libFWCoreFramework.so
+#18 0x00007fe9a0b280cb in edm::EventProcessor::readNextEventForStream(unsigned int, edm::LuminosityBlockProcessingStatus&) () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/libFWCoreFramework.so
+#19 0x00007fe9a0b28403 in edm::SerialTaskQueue::QueuedTask<void edm::SerialTaskQueueChain::push<edm::EventProcessor::handleNextEventForStreamAsync(edm::WaitingTaskHolder, unsigned int)::{lambda()#1}>(edm::EventProcessor::handleNextEventForStreamAsync(edm::WaitingTaskHolder, unsigned int)::{lambda()#1}&&)::{lambda()#1}>::execute() () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/libFWCoreFramework.so
+#20 0x00007fe99f2c17a1 in tbb::internal::custom_scheduler<tbb::internal::IntelSchedulerTraits>::local_wait_for_all (this=0x7fe99ad4f200, parent=..., child=<optimized out>) at ../../src/tbb/scheduler.cpp:1020
+#21 0x00007fe9a0b25a85 in edm::EventProcessor::processLumis(std::shared_ptr<void> const&) () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/libFWCoreFramework.so
+#22 0x00007fe9a0b2dffe in edm::EventProcessor::runToCompletion() () from /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/cmssw/CMSSW_10_6_12/lib/slc7_amd64_gcc820/libFWCoreFramework.so
+#23 0x0000000000410c7b in main::{lambda()#1}::operator()() const ()
+#24 0x000000000040f2e2 in main ()
+
+Current Modules:
+
+Module: none (crashed)
+
+A fatal system signal has occurred: abort signal
+
