@@ -19,14 +19,14 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 
 process.options = cms.untracked.PSet(
 #    wantSummary = cms.untracked.bool(True),
-    SkipEvent = cms.untracked.vstring('MismatchedInputFiles'),
+#	SkipEvent = cms.untracked.vstring('ProductNotFound')
 )
 
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag.globaltag = "106X_dataRun2_v27"
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(-1)
 )
 
 # /SingleMuon/Run2018*-12Nov2019_UL2018*/AOD
@@ -35,12 +35,10 @@ process.maxEvents = cms.untracked.PSet(
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-#         'file:63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root'
-         'root://cms-xrd-global.cern.ch//store/data/Run2018D/SingleMuon/AOD/12Nov2019_UL2018-v4/100000/63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root'
+         'file:63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root'
+#           'file:00253F5F-84B8-D942-96D7-D36D49955D9F.root'
+#         'root://cms-xrd-global.cern.ch//store/data/Run2018D/SingleMuon/AOD/12Nov2019_UL2018-v4/100000/63BF07E8-4AAA-DC4D-99DE-48B52FCB0C06.root'
     ),
-    secondaryFileNames = cms.untracked.vstring(
-         'root://cms-xrd-global.cern.ch//store/data/Run2018D/SingleMuon/ALCARECO/SiPixelCalSingleMuon-ForPixelALCARECO_UL2018-v1/250000/EE812551-E563-5B44-B6AC-F8190A191ABF.root',
-    )
 )
 
 #---------------------- Refitter -----------------------
@@ -49,30 +47,42 @@ process.load("RecoTracker.TrackProducer.TrackRefitters_cff")
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 process.load("RecoTracker.MeasurementDet.MeasurementTrackerEventProducer_cfi")
 
-process.MeasurementTrackerEvent.pixelClusterProducer = 'ALCARECOSiPixelCalSingleMuon'
-process.MeasurementTrackerEvent.stripClusterProducer = 'ALCARECOSiPixelCalSingleMuon'
-process.MeasurementTrackerEvent.inactivePixelDetectorLabels = cms.VInputTag()
-process.MeasurementTrackerEvent.inactiveStripDetectorLabels = cms.VInputTag()
+#process.MeasurementTrackerEvent.pixelClusterProducer = 'slimmedMuonTrackExtras'
+#process.MeasurementTrackerEvent.stripClusterProducer = 'slimmedMuonTrackExtras'
+#process.MeasurementTrackerEvent.inactivePixelDetectorLabels = cms.VInputTag()
+#process.MeasurementTrackerEvent.inactiveStripDetectorLabels = cms.VInputTag()
 
-#process.TrackRefitter.src = cms.InputTag('globalMuons::RECO')
-process.TrackRefitter.src = 'ALCARECOSiPixelCalSingleMuon'
-#process.TrackRefitter.src = 'generalTracks'
-process.TrackRefitter.TrajectoryInEvent = True
-process.TrackRefitter.NavigationSchool = ''
-process.TrackRefitter.TTRHBuilder = "WithAngleAndTemplate"
+#process.tracksFromMuons = cms.EDProducer("TrackProducerFromPatMuons",
+#                                         src = cms.InputTag("slimmedMuons"),
+#                                         innerTrackOnly = cms.bool(True),
+#                                         )
+
+process.trackExtraRekeyer = cms.EDProducer("TrackExtraRekeyer",
+                                         src = cms.InputTag("generalTracks"),
+#                                         association = cms.InputTag("muonReducedTrackExtras"),
+                                         association = cms.InputTag("slimmedMuonTrackExtras"),
+                                         )
+
+import RecoTracker.TrackProducer.TrackRefitter_cfi
+process.myRefittedTracks = RecoTracker.TrackProducer.TrackRefitter_cfi.TrackRefitter.clone()
+process.myRefittedTracks.src= 'trackExtraRekeyer'
+process.myRefittedTracks.NavigationSchool = ''
+process.myRefittedTracks.Fitter = 'FlexibleKFFittingSmoother'
+process.myRefittedTracks.TrajectoryInEvent = True
+process.myRefittedTracks.TTRHBuilder = "WithAngleAndTemplate"
 
 process.stage = cms.EDAnalyzer('ntuple'
-     , format_file       = cms.string('AOD')
-     , isdata            = cms.bool(True)
-     , year              = cms.untracked.int32(2018)
+     , format_file        = cms.string('AOD')
+     , isdata             = cms.bool(True)
+     , year               = cms.untracked.int32(2018)
      , primaryVertexColl  = cms.InputTag('offlinePrimaryVertices')  #->AOD
-     , isotracks             = cms.InputTag("isolatedTracks")
+     , isotracks          = cms.InputTag("isolatedTracks")
      , tracks             = cms.InputTag("generalTracks")
      , collectionHSCP     = cms.InputTag("HSCParticleProducer")
-     , isoHSCP0            = cms.InputTag("HSCPIsolation","R005")
-     , isoHSCP1            = cms.InputTag("HSCPIsolation","R01")
-     , isoHSCP2            = cms.InputTag("HSCPIsolation","R03")
-     , isoHSCP3            = cms.InputTag("HSCPIsolation","R05")
+     , isoHSCP0           = cms.InputTag("HSCPIsolation","R005")
+     , isoHSCP1           = cms.InputTag("HSCPIsolation","R01")
+     , isoHSCP2           = cms.InputTag("HSCPIsolation","R03")
+     , isoHSCP3           = cms.InputTag("HSCPIsolation","R05")
      , dedx               = cms.InputTag("dedxHitInfo")
      , MiniDedx           = cms.InputTag("isolatedTracks")
      , dEdxHitInfoPrescale = cms.InputTag("dedxHitInfo","prescale")
@@ -102,7 +112,7 @@ process.stage = cms.EDAnalyzer('ntuple'
     , pfCand            = cms.InputTag("particleFlow", "", "RECO")
     , pfJet             = cms.InputTag("ak4PFJetsCHS", "", "RECO")
     , L1muon            = cms.InputTag("gmtStage2Digis","Muon","RECO")
-    , trajInputLabel    = cms.untracked.InputTag('TrackRefitter::HSCPAnalysis')
+    , trajInputLabel    = cms.untracked.InputTag('myRefittedTracks')
 )
 
 
@@ -115,8 +125,10 @@ process.load("SUSYBSMAnalysis.HSCP.HSCParticleProducer_cff")
 # CMS Path
 process.TrackRefitter_step = cms.Path(
   process.offlineBeamSpot*
-  process.MeasurementTrackerEvent*
-  process.TrackRefitter
+#  process.MeasurementTrackerEvent*
+  process.trackExtraRekeyer*
+  process.myRefittedTracks
+#  process.TrackRefitter
 )
 
 process.HSCParticleProducer_step = cms.Path(process.HSCParticleProducerSeq)
