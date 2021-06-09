@@ -1383,36 +1383,35 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     // Loop on track trajectory association map // Tav
     edm::Handle<TrajTrackAssociationCollection> hTTAC;
     iEvent.getByToken(m_trajTag, hTTAC);
-    std::cout << "===========> trajectory collection size: " << hTTAC->size() << std::endl;
     if (m_format != "miniAOD" && hTTAC.isValid())  {
-        TrajectoryStateCombiner tsoscomb;
         const TrajTrackAssociationCollection ttac = *(hTTAC.product());
-        std::cout << " Start to loop on the TrajTrackAssociationCollection" << std::endl;
         for (TrajTrackAssociationCollection::const_iterator it = ttac.begin(); it !=  ttac.end(); ++it){
             const edm::Ref<std::vector<Trajectory> > refTraj = it->key;
             // -- Check whether it is a pixel track
-//            std::cout << " Check whether it is a pixel track" << std::endl;
             bool isBpixTrack(false), isFpixTrack(false);
             isPixelTrack(refTraj, isBpixTrack, isFpixTrack);
             if (!isBpixTrack && !isFpixTrack) { continue; }
+            
             // -- Clusters associated with a track
-                   std::vector<TrajectoryMeasurement> tmeasColl =refTraj->measurements();
-//                   int iCluster(0);
-                   for (std::vector<TrajectoryMeasurement>::const_iterator tmeasIt = tmeasColl.begin(); tmeasIt!=tmeasColl.end(); tmeasIt++){
-                          if (!tmeasIt->updatedState().isValid()) continue;
-                       
-                          TrajectoryStateOnSurface tsos = tsoscomb(tmeasIt->forwardPredictedState(), tmeasIt->backwardPredictedState());
-                          TransientTrackingRecHit::ConstRecHitPointer hit = tmeasIt->recHit();
-                          if(!hit->isValid()) continue;
-
-                          if (hit->geographicalId().det() != DetId::Tracker) {
-                            continue;
-                          }
-                       const SiPixelRecHit *pixhit = dynamic_cast<const SiPixelRecHit*>(hit->hit());
-                       float probQ       = pixhit->probabilityQ();
-                       float probXY        = pixhit->probabilityXY();
-                       std::cout << "probQ: " << probQ << " and " << "probXY" << probXY << std::endl;
-                   }
+            std::vector<TrajectoryMeasurement> tmeasColl = refTraj->measurements();
+            int numRecHits = 0;
+            for (auto const& tmeasIt : tmeasColl) {
+                if (!tmeasIt.updatedState().isValid()) continue;
+                const TrackingRecHit* hit = tmeasIt.recHit()->hit();
+                const SiPixelRecHit* pixhit = dynamic_cast<const SiPixelRecHit*>(hit);
+                if (hit->geographicalId().det() != DetId::Tracker) continue;
+                if (pixhit == nullptr) continue;
+                if (!pixhit->isValid()) continue;
+                float probQ         = pixhit->probabilityQ();
+                float probXY        = pixhit->probabilityXY();
+                numRecHits++;
+//              LocalPoint lp = pixhit->localPosition();
+//              float rechit_x = lp.x();
+//              float rechit_y = lp.y();
+                //                       std::cout << "rechit_x: " << rechit_x << " and " << "rechit_y" << rechit_y << std::endl;
+                std::cout << "probQ: " << probQ << " and " << "probXY " << probXY << std::endl;
+            }
+            std::cout << "numRecHits: " << numRecHits << std::endl;
         } // end loop TrajTrackAssociationCollection
     } else {
         std::cout << "hTTAC is invalid" << std::endl;
