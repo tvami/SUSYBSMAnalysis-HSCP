@@ -54,11 +54,16 @@
 
 #include "SimDataFormats/CrossingFrame/interface/CrossingFrame.h"
 #include "SimDataFormats/CrossingFrame/interface/MixCollection.h"
+#include "SimDataFormats/TrackerDigiSimLink/interface/PixelDigiSimLink.h"
 #include "SimDataFormats/TrackerDigiSimLink/interface/StripDigiSimLink.h"
 #include "SimDataFormats/TrackingHit/interface/PSimHitContainer.h"
+#include "SimDataFormats/TrackingHit/interface/PSimHit.h"
+
+#include "SimTracker/TrackerHitAssociation/interface/TrackerHitAssociator.h"
 //#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
+#include "DataFormats/SiPixelDigi/interface/PixelDigi.h"
 
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
@@ -131,31 +136,31 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        edm::EDGetTokenT< susybsm::HSCPIsolationValueMap  > m_hscpiso1;
        edm::EDGetTokenT< susybsm::HSCPIsolationValueMap  > m_hscpiso2;
        edm::EDGetTokenT< susybsm::HSCPIsolationValueMap  > m_hscpiso3;
-//       edm::EDGetTokenT<std::vector<reco::PFCandidate> >  m_tracksMiniAOD;
        edm::EDGetTokenT<reco::DeDxHitInfoAss>   m_dedxTag;
        edm::EDGetTokenT<edm::Association<std::vector<reco::DeDxHitInfo> > >  m_dedxMiniTag;
        edm::EDGetTokenT<edm::ValueMap<int>> m_dedxPrescaleTag;
-       edm::EDGetTokenT< edm::DetSetVector<StripDigiSimLink> > m_stripSimLink;
-       edm::EDGetTokenT< std::vector<reco::GenParticle> > genParticlesToken_;
        edm::EDGetTokenT<reco::MuonCollection>  m_muonTag;
        edm::EDGetTokenT<reco::MuonTimeExtraMap>  m_muontimecb;
        edm::EDGetTokenT<reco::MuonTimeExtraMap>  m_muontimedt;
        edm::EDGetTokenT<reco::MuonTimeExtraMap>  m_muontimecsc;
-       edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
+       edm::EDGetTokenT< std::vector<reco::GenParticle> > genParticlesToken_;
        edm::EDGetTokenT<LumiScalersCollection> m_lumiScalerTag;
        edm::EDGetTokenT<CSCSegmentCollection>  m_cscSegments;
        edm::EDGetTokenT<DTRecSegment4DCollection>  m_dt4DSegments;
        edm::EDGetTokenT<TrajTrackAssociationCollection>  m_trajTag;
-
-
-//       edm::EDGetTokenT< edm::ValueMap<reco::DeDxData> > dEdxTrackToken_;
+       edm::EDGetTokenT< edm::DetSetVector<StripDigiSimLink> > m_stripSimLink;
+       edm::EDGetTokenT<edm::DetSetVector<PixelDigiSimLink>> PixelDigiSimLinkToken;
+       edm::EDGetTokenT<edm::SimTrackContainer> SimTrackContainerToken;
+       edm::EDGetTokenT<edm::SimVertexContainer> SimVertexContainerToken;
 
        bool m_runOnGS;
        bool m_isdata;
+       bool m_doRecomputeMuTim;
        int  i_year;
-       int printOut_;
-//       edm::InputTag trackTags_; //used to select what tracks to read from configuration file
-//
+       int  printOut_;
+    
+       edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
+       TrackerHitAssociator::Config trackerHitAssociatorConfig_;
        std::vector< edm::EDGetTokenT<CrossingFrame<PSimHit> > > cfTokens_;
        std::vector< edm::EDGetTokenT<std::vector<PSimHit> > > simHitTokens_;
        typedef std::pair<unsigned int, unsigned int> simHitCollectionID;
@@ -167,7 +172,6 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        TH3F* dEdxTemplatesUncorr = NULL;
        TH3F* dEdxTemplatesCorr = NULL;
 
-       bool m_doRecomputeMuTim;
        muonTimingCalculator tofCalculator;
        int CurrentRun = 0;
 
@@ -175,7 +179,7 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 //       TH1D * histo; 
        TTree *smalltree;
        int      tree_runNumber ;
-       uint32_t      tree_event ;
+       uint32_t tree_event ;
        int      tree_npv;
        int      tree_ngoodpv;
 
@@ -224,6 +228,10 @@ class ntuple : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
        float    tree_track_ih_ampl_corr[nMaxTrack];
        float    tree_track_ias_ampl[nMaxTrack];
        float    tree_track_ias_ampl_corr[nMaxTrack];
+       int      tree_track_nclus[nMaxTrack];
+       int      tree_track_clus_PID[nMaxTrack][10];
+       float    tree_track_probQ[nMaxTrack];
+       float    tree_track_probXY[nMaxTrack];
 
        int      tree_dedxhits ;
        uint32_t tree_dedx_detid[nMaxDeDxH];
@@ -351,6 +359,8 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
 
 {
 */
+ :
+trackerHitAssociatorConfig_(iConfig, consumesCollector()) 
 {
    m_format   = iConfig.getParameter<std::string>("format_file");
    m_isdata = iConfig.getParameter<bool>("isdata");
@@ -394,7 +404,11 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    m_doRecomputeMuTim  = iConfig.getParameter<bool>("doRecomputeMuTim");
    m_cscSegments       = consumes<CSCSegmentCollection>(iConfig.getParameter<edm::InputTag>("cscSegments"));
    m_dt4DSegments      = consumes<DTRecSegment4DCollection>(iConfig.getParameter<edm::InputTag>("dt4DSegments"));
+   
    m_trajTag           = consumes<TrajTrackAssociationCollection> (iConfig.getUntrackedParameter<edm::InputTag>("trajInputLabel"));
+   PixelDigiSimLinkToken   = consumes <edm::DetSetVector<PixelDigiSimLink>>(edm::InputTag("simSiPixelDigis"));
+   SimTrackContainerToken  = consumes <edm::SimTrackContainer>(edm::InputTag("g4SimHits"));
+   SimVertexContainerToken = consumes <edm::SimVertexContainer>(edm::InputTag("g4SimHits"));
 
 
    if (m_doRecomputeMuTim) {
@@ -459,6 +473,10 @@ ntuple::ntuple(const edm::ParameterSet& iConfig)
    smalltree -> Branch ( "track_ih_ampl_corr",   tree_track_ih_ampl_corr,   "track_ih_ampl_corr[ntracks]/F" );
    smalltree -> Branch ( "track_ias_ampl",       tree_track_ias_ampl,       "track_ias_ampl[ntracks]/F" );
    smalltree -> Branch ( "track_ias_ampl_corr",  tree_track_ias_ampl_corr,  "track_ias_ampl_corr[ntracks]/F" );
+   smalltree -> Branch ( "track_nclus",          tree_track_nclus,          "track_nclus[ntracks]/I" ) ;
+   smalltree -> Branch ( "track_clus_PID",       tree_track_clus_PID,       "track_clus_PID[ntracks][10]/I" );
+   smalltree -> Branch ( "track_probQ",          tree_track_probQ,          "track_probQ[ntracks]/F" );
+   smalltree -> Branch ( "track_probXY",         tree_track_probXY,         "track_probXY[ntracks]/F" );
 
    smalltree -> Branch ( "ndedxhits",        &tree_dedxhits ) ;
    smalltree -> Branch ( "dedx_detid",       tree_dedx_detid,      "dedx_detid[ndedxhits]/i" );
@@ -588,7 +606,14 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     using namespace reco;
 
     using reco::TrackCollection;
-
+    
+    int factorial(int);
+    
+    std::vector<PSimHit> vec_simhits_assoc;
+    TrackerHitAssociator *associate(0);
+    associate = new TrackerHitAssociator(iEvent,trackerHitAssociatorConfig_);
+    edm::Handle< edm::DetSetVector<PixelDigiSimLink> > pixeldigisimlink;
+    iEvent.getByToken(PixelDigiSimLinkToken, pixeldigisimlink);
 
     EventID myEvId = iEvent.id();
     tree_runNumber = myEvId.run();
@@ -794,7 +819,7 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                                    << ", Hit count = " << Nhits << ", " << sizeof(SimHitCollMap_)
                                    << " bytes" << std::endl;
      }
-    }
+    } // end of loop on simHits
 
 
     // inspired by SUSYBSMAnalysis-HSCP/plugins/HSCPValidator.cc
@@ -1393,6 +1418,8 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
             if (!isBpixTrack && !isFpixTrack) { continue; }
             
             // -- Clusters associated with a track
+            float probQonTrackWMulti = 1;
+            float probXYonTrackWMulti = 1;
             std::vector<TrajectoryMeasurement> tmeasColl = refTraj->measurements();
             int numRecHits = 0;
             for (auto const& tmeasIt : tmeasColl) {
@@ -1405,13 +1432,44 @@ ntuple::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                 float probQ         = pixhit->probabilityQ();
                 float probXY        = pixhit->probabilityXY();
                 numRecHits++;
+                probQonTrackWMulti *= probQ; // \alpha_n in formula
+                probXYonTrackWMulti *= probXY; // \alpha_n in formula
 //              LocalPoint lp = pixhit->localPosition();
 //              float rechit_x = lp.x();
 //              float rechit_y = lp.y();
-                //                       std::cout << "rechit_x: " << rechit_x << " and " << "rechit_y" << rechit_y << std::endl;
-                std::cout << "probQ: " << probQ << " and " << "probXY " << probXY << std::endl;
-            }
-            std::cout << "numRecHits: " << numRecHits << std::endl;
+//              std::cout << "rechit_x: " << rechit_x << " and " << "rechit_y" << rechit_y << std::endl;
+//                std::cout << "probQ: " << probQ << " and " << "probXY " << probXY << std::endl;
+                
+                // associate simhits to the rechit so we can learn the particleType
+                vec_simhits_assoc.clear();
+                vec_simhits_assoc = associate->associateHit(*pixhit);
+                tree_track_nclus[tree_ntracks] = vec_simhits_assoc.size();
+                
+                int iSimHit = 0;
+                for (std::vector<PSimHit>::const_iterator m = vec_simhits_assoc.begin();  m < vec_simhits_assoc.end() && iSimHit < 10; ++m) {
+                    tree_track_clus_PID[tree_ntracks][iSimHit] = m->particleType();
+                    ++iSimHit;
+                }
+            } // end loop on on-track-clusters
+            float logprobQonTrackWMulti = log(probQonTrackWMulti);
+            float logprobXYonTrackWMulti = log(probXYonTrackWMulti);
+//            std::cout << "numRecHits: " << numRecHits << std::endl;
+            float probQonTrackTerm = 0;
+            float probXYonTrackTerm = 0;
+            for(int iTkCl = 0; iTkCl < numRecHits; ++iTkCl) {
+                        probQonTrackTerm += ((pow(-logprobQonTrackWMulti,iTkCl))/(factorial(iTkCl)));
+                        probXYonTrackTerm += ((pow(-logprobXYonTrackWMulti,iTkCl))/(factorial(iTkCl)));
+//                        cout << "For cluster " << iTkCl << " the probQonTrackTerm is " << probQonTrackTerm << " the probXYonTrackTerm is " << probXYonTrackTerm <<  endl;
+                    }
+            
+            float probQonTrack = probQonTrackWMulti*probQonTrackTerm;
+            float probXYonTrack = probXYonTrackWMulti*probXYonTrackTerm;
+//            cout << "For this track probQonTrack is " << probQonTrack << " and probXYonTrack is  " << probXYonTrack << endl;
+            
+            tree_track_probQ[tree_ntracks]= probQonTrack;
+            tree_track_probXY[tree_ntracks]= probXYonTrack;
+            
+
         } // end loop TrajTrackAssociationCollection
     } else {
         std::cout << "hTTAC is invalid" << std::endl;
@@ -1636,6 +1694,11 @@ ntuple::isPixelTrack(const edm::Ref<std::vector<Trajectory> > &refTraj, bool &is
         if (testSubDetID==PixelSubdetector::PixelEndcap) isFpixtrack = true;
         if (isBpixtrack && isFpixtrack) break;
     }
+}
+
+int
+factorial(int n) {
+  return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
 }
 
 //define this as a plug-in
