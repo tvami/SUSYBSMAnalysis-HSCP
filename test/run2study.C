@@ -587,41 +587,6 @@ void run2study::Loop(int year, TString Letter)
 
       if(jentry%10000 ==0 && jentry!=0) cout << " number of processed events is " << jentry <<  " = " << (100.*jentry)/(1.*nentries) << "%" <<endl;
 
-//      if (runNumber<305150 || runNumber>305300) continue;
-
-     
-       
-//       for (int igenpart=0; igenpart<ngenpart; igenpart++) {
-//           bool selection=true;
-//           if (gen_pt[igenpart]<55) selection=false;
-//           if (abs(gen_eta[ngenpart])>2.1) selection=false;
-//           if (!hlt_mu50 && !hlt_tkmu100 && !hlt_oldmu100) selection=false;
-//
-//           bool isHSCPBasedOnGenPDGIDs=false;
-//           int PDGid = gen_pdg[ngenpart];
-//
-//           isHSCPBasedOnGenPDGIDs = (PDGid==17||PDGid==1000993||PDGid==1009213||PDGid==1009313||PDGid==1009323||PDGid==1009113||PDGid==1009223||PDGid==1009333||PDGid==1091114||PDGid==1092114||PDGid==1092214||PDGid==1092224||PDGid==1093114||PDGid==1093214||PDGid==1093224||PDGid==1093314||PDGid==1093324||PDGid==1093334);
-//
-//           cout << "Filling HSCP gen plots at the index " << track_index_hit[igenpart] << " where igenpart is " << igenpart << endl;
-//           if (isHSCPBasedOnGenPDGIDs) {
-//               if (selection) {
-//                   GenHSCP_probQ_wCuts->Fill(track_probQ[track_index_hit[igenpart]]);
-//                   GenHSCP_probXY_wCuts->Fill(track_probXY[track_index_hit[igenpart]]);
-//               } else {
-//                   GenHSCP_probQ_wNoCuts->Fill(track_probQ[track_index_hit[igenpart]]);
-//                   GenHSCP_probXY_wNoCuts->Fill(track_probXY[track_index_hit[igenpart]]);
-//               }
-//           } else {
-//               if (selection) {
-//                   GenBckg_probQ_wCuts->Fill(track_probQ[track_index_hit[igenpart]]);
-//                   GenBckg_probXY_wCuts->Fill(track_probXY[track_index_hit[igenpart]]);
-//               } else {
-//                   GenBckg_probQ_wNoCuts->Fill(track_probQ[track_index_hit[igenpart]]);
-//                   GenBckg_probXY_wNoCuts->Fill(track_probXY[track_index_hit[igenpart]]);
-//               }
-//           }
-//       } // end loop on gen part
-       
       if (!hlt_mu50 && !hlt_tkmu100 && !hlt_oldmu100) continue;
        
       nPVVsRun->Fill(runNumber,npv);
@@ -648,30 +613,27 @@ void run2study::Loop(int year, TString Letter)
 
            for (int ihs=0; ihs<numOfClusOnTrack; ihs++) {
                int PDGid = track_clus_PID[iTrack][ihs];
+               if(isHSCPBasedOnGenPDGIDs) continue;
                isHSCPBasedOnGenPDGIDs = (PDGid==17||PDGid==1000993||PDGid==1009213||PDGid==1009313||PDGid==1009323||PDGid==1009113||PDGid==1009223||PDGid==1009333||PDGid==1091114||PDGid==1092114||PDGid==1092214||PDGid==1092224||PDGid==1093114||PDGid==1093214||PDGid==1093224||PDGid==1093314||PDGid==1093324||PDGid==1093334);
 
-//               cout << "Looking at HSCP candidate ihs=" << ihs << endl;
-//               cout << "on the track index hscp_track_idx=" << hscp_track_idx << endl;
-//               cout << "The HSCP PDGid is " << PDGid << endl;
-//               cout << "out of the total " << nhscp << " HSCP candidates on this track" << endl;
-               if (isHSCPBasedOnGenPDGIDs) {
-                   if (selection) {
-                       GenHSCP_probQ_wCuts->Fill(track_probQ[iTrack]);
-                       GenHSCP_probXY_wCuts->Fill(track_probXY[iTrack]);
-                   } else {
-                       GenHSCP_probQ_wNoCuts->Fill(track_probQ[iTrack]);
-                       GenHSCP_probXY_wNoCuts->Fill(track_probXY[iTrack]);
-                   }
-               } else {
-                   if (selection) {
-                       GenBckg_probQ_wCuts->Fill(track_probQ[iTrack]);
-                       GenBckg_probXY_wCuts->Fill(track_probXY[iTrack]);
-                   } else {
-                       GenBckg_probQ_wNoCuts->Fill(track_probQ[iTrack]);
-                       GenBckg_probXY_wNoCuts->Fill(track_probXY[iTrack]);
-                   }
-               }
            } // end loop on rechtis on each track
+           if (isHSCPBasedOnGenPDGIDs) {
+               if (selection) {
+                   GenHSCP_probQ_wCuts->Fill(track_probQ[iTrack]);
+                   GenHSCP_probXY_wCuts->Fill(track_probXY[iTrack]);
+               } else {
+                   GenHSCP_probQ_wNoCuts->Fill(track_probQ[iTrack]);
+                   GenHSCP_probXY_wNoCuts->Fill(track_probXY[iTrack]);
+               }
+           } else {
+               if (selection) {
+                   GenBckg_probQ_wCuts->Fill(track_probQ[iTrack]);
+                   GenBckg_probXY_wCuts->Fill(track_probXY[iTrack]);
+               } else {
+                   GenBckg_probQ_wNoCuts->Fill(track_probQ[iTrack]);
+                   GenBckg_probXY_wNoCuts->Fill(track_probXY[iTrack]);
+               }
+           }
        } // end loop on tracks
        
       // start loop on HSCP candidates
