@@ -17,11 +17,11 @@
 
 filesperjobs=100
 odir='/opt/sbg/cms/ui3_data1/dapparu/HSCP/Production/'
-idir='/dpm/in2p3.fr/home/cms/phedex/store/user/dapparu/HSCP/Analysis/v2-0/prodJuly2021_CMSSW_10_6_20/MET/Analysis_MET_UL2017B_firstprod/210703_091704'
+idir='/dpm/in2p3.fr/home/cms/phedex/store/user/dapparu/HSCP/Analysis/v2-1/prodJuly2021_CMSSW_10_6_20/MET/Analysis_MET_UL2017B_testReplica/210715_093025/'
 #idir='/dpm/in2p3.fr/home/cms/phedex/store/user/dapparu/HSCP/Analysis/v2-1/prodJuly2021_CMSSW_10_6_20/MET/Analysis_MET_UL2017B_297047-297666/210706_125248'
 pathin2p3='root://sbgse1.in2p3.fr:/'
-#options='-j 8 -T -f'
-options='-f'
+options='-j 8 -T -f'
+#options='-f'
 
 listofsubdir=`rfdir $idir | awk '{print $9'}`
 

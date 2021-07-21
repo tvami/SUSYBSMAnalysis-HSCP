@@ -56,7 +56,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
    gStyle->SetPalette(1);
    gStyle->SetNdivisions(505);*/
 
-   unsigned int NPseudoExp = 100; //Number of PseudoExperiment to run
+   unsigned int NPseudoExp = 10; //Number of PseudoExperiment to run
 
    //7TeV DXY/DZ/ANGLE 85/326  86/327   10/251
    double CosmicVetoInEfficiency7TeV    = 0.26 * 0.26 * 0.04 ; 
@@ -84,7 +84,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
     int MassNBins           = 400;
     double             MassHistoUpperBound = 4000;
 
-    double dEdxK_MC(1.0), dEdxC_MC(1.0);
+    double dEdxK_MC(2.37), dEdxC_MC(2.93);
 
     TDirectory* dir = (TDirectory*)InputFile->FindObjectAny("analyzer");
     if (!dir){
@@ -93,7 +93,8 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
     TList* list = dir->GetListOfKeys();
     //Do two loops, one for the actual background prediction and one for the 
     //region with TOF<1
-    for(unsigned int S=0; S<2; S++) {
+    //for(unsigned int S=0; S<2; S++) {
+    for(unsigned int S=0; S<1; S++) {
 	    string Suffix="";
         if(S==1) Suffix="_Flip";
 
@@ -174,11 +175,11 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
 	            H_H_Binned[i]            = (TH1D*)GetObjectFromPath(directory, ("H_H_Binned" + Version).c_str());
 	        }
 
-            TH3D*  Pred_EtaP      = (TH3D*)GetObjectFromPath(directory, ("Pred_EtaP" + Suffix).c_str());
+            TH3D*  Pred_EtaP      = (TH3D*)GetObjectFromPath(directory, ("Pred_EtaP" + Suffix).c_str()); //region C or G
 	        TH2D*  Pred_I         = (TH2D*)GetObjectFromPath(directory, ("Pred_I" + Suffix).c_str());
 	        TH2D*  Pred_TOF       = (TH2D*)GetObjectFromPath(directory, ("Pred_TOF" + Suffix).c_str());
-	        TH2D*  Pred_EtaB      = (TH2D*)GetObjectFromPath(directory, ("Pred_EtaB" + Suffix).c_str());
-	        TH2D*  Pred_EtaS      = (TH2D*)GetObjectFromPath(directory, ("Pred_EtaS" + Suffix).c_str());
+	        TH2D*  Pred_EtaB      = (TH2D*)GetObjectFromPath(directory, ("Pred_EtaB" + Suffix).c_str()); //region A
+	        TH2D*  Pred_EtaS      = (TH2D*)GetObjectFromPath(directory, ("Pred_EtaS" + Suffix).c_str()); //region B
 	        TH2D*  Pred_EtaS2     = (TH2D*)GetObjectFromPath(directory, ("Pred_EtaS2" + Suffix).c_str());
             //----------------------------------------------------------------------------------------------------Prediction in eta bins  PZ1
             //                                                                                                                      pT I ibeta
@@ -191,6 +192,8 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
             TH3D*  PDF_H_EtaMass   = (TH3D*)GetObjectFromPath(directory, ("PDF_H_EtaMass"+ Suffix).c_str());       //H <-> x x o
             //----------------------------------------------------------------------------------------------------Prediction in eta bins
 
+
+            TH2D*  obsMass = (TH2D*)GetObjectFromPath(directory, ("Mass"+Suffix).c_str());
 
             TH2D*  H_D_DzSidebands= (TH2D*)GetObjectFromPath(directory, "H_D_DzSidebands");
 	        TH1D*  H_D_CosmicMO=NULL;
@@ -250,6 +253,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
             Pred_Mass_HA ->Reset();
             TH2D*  Pred_Mass_CF      = (TH2D*)GetObjectFromPath(directory, ("Mass" + Suffix).c_str())->Clone(("Pred_Mass_CF" + Suffix).c_str());         
             Pred_Mass_CF ->Reset();
+
             //----------------------------------------------------------------------------------------------------Prediction in eta bins
 
             for(int i=0; i<PredBins; i++) {
@@ -264,6 +268,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
             //////////////////////////////////////////////////      MAKING THE PREDICTION
             for(unsigned int CutIndex=0;CutIndex<(unsigned int)HCuts_Pt->GetXaxis()->GetNbins();CutIndex++){
                 //if(CutIndex<86 || CutIndex>87)continue;
+                if(CutIndex>10)continue;
 
                 double A=H_A->GetBinContent(CutIndex+1);  double AErr = sqrt(A);
                 double B=H_B->GetBinContent(CutIndex+1);  double BErr = sqrt(B);
@@ -427,7 +432,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
                 TH1D* PDF_E_Eta_2D    = PDF_E_Eta ->ProjectionY("ProjEEta" ,CutIndex+1,CutIndex+1);  
                 //----------------------------------------------------------------------------------------------------Prediction in eta bins
 
-                if (CutIndex==4) compareForwardToBackwardWeights (Pred_EtaS_Proj, Pred_EtaB_Proj);
+                //if (CutIndex==4) compareForwardToBackwardWeights (Pred_EtaS_Proj, Pred_EtaB_Proj);
                 if (symmetrizeHistos) symmetrizeHisto(Pred_EtaB_Proj,TypeMode);//WAIT//
                 if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS_Proj,TypeMode);
                 if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS2_Proj,TypeMode);
@@ -438,6 +443,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
 
                 Pred_EtaP->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
                 TH2D* Pred_EtaPWeighted    = (TH2D*)Pred_EtaP->Project3D("zy");
+                TH2D* Pred_EtaP_tosave    = (TH2D*)Pred_EtaP->Project3D("zy");
                 //----------------------------------------------------------------------------------------------------Prediction in eta bins PZ4
                 PDF_G_EtaP->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
                 TH2D* PDF_G_EtaP_2D    =  (TH2D*)PDF_G_EtaP->Project3D("zy"); PDF_C_EtaP->GetXaxis()->SetRange(CutIndex+1,CutIndex+1);
@@ -551,6 +557,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
                         }
                         delete AbsoluteWeight;
                     */
+                    symmetrizeHistos=false;
                     if (symmetrizeHistos) symmetrizeHisto(Pred_EtaB_Proj_PE,TypeMode);
                     if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS_Proj_PE,TypeMode);
                     if (symmetrizeHistos) symmetrizeHisto(Pred_EtaS2_Proj_PE,TypeMode);
@@ -558,6 +565,9 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
                     Pred_EtaB_Proj_PE->Scale(1.0/Pred_EtaB_Proj_PE->Integral());
                     Pred_EtaS_Proj_PE->Scale(1.0/Pred_EtaS_Proj_PE->Integral());
                     if(TypeMode==2) Pred_EtaS2_Proj_PE->Scale(1.0/Pred_EtaS2_Proj_PE->Integral());// jesli normalizowac, to wszystkie
+
+                    TH1D* eta_ratio = (TH1D*) Pred_EtaS_Proj_PE->Clone();
+                    eta_ratio->Divide(Pred_EtaPWeighted_PE->ProjectionX());
 
 
                     double WeightP = 0.0;
@@ -567,6 +577,7 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
                         if(Pred_EtaB_Proj_PE->GetBinContent(x)>0){
                             //mk pz    WeightP = 1.;
                             WeightP = Pred_EtaS_Proj_PE ->GetBinContent(x)/Pred_EtaB_Proj_PE->GetBinContent(x);
+                            //std::cout << " weight: " << WeightP << std::endl;
                             if(TypeMode==2)WeightP*= Pred_EtaS2_Proj_PE->GetBinContent(x)/Pred_EtaB_Proj_PE->GetBinContent(x);
                         }
 
@@ -592,25 +603,33 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
                     //         TH1D* Pred_P_ProjPE = Pred_EtaPWeighted_PE /*EtaPC*/->ProjectionY("Pred_P_ProjPE", 0, 30);                                                        Pred_P_ProjPE->Scale(1.0/Pred_P_ProjPE->Integral(0, Pred_P_ProjPE->GetNbinsX()+1)); // include overflow
 
 
-                    TH1D* Pred_P_ProjPE = Pred_EtaPWeighted_PE /*EtaPC*/->ProjectionY("Pred_P_ProjPE", 1, Pred_EtaPWeighted_PE->GetXaxis()->GetNbins());                                                        Pred_P_ProjPE->Scale(1.0/Pred_P_ProjPE->Integral(0, Pred_P_ProjPE->GetNbinsX()+1)); // include overflow
+                    TH1D* Pred_P_ProjPE = Pred_EtaPWeighted_PE /*EtaPC*/->ProjectionY("Pred_P_ProjPE", 1, Pred_EtaPWeighted_PE->GetXaxis()->GetNbins());                                    
+                    Pred_P_ProjPE->Scale(1.0/Pred_P_ProjPE->Integral(0, Pred_P_ProjPE->GetNbinsX()+1)); // include overflow
                     // Minus side
                     //         TH1D* Pred_P_ProjPE_M = Pred_EtaPWeighted_PE /*EtaPC*/->ProjectionY("Pred_P_ProjPE", 0, 30);                                                        Pred_P_ProjPE->Scale(1.0/Pred_P_ProjPE->Integral(0, Pred_P_ProjPE->GetNbinsX()+1)); // include overflow
-                    for(int i=0;i<Pred_I_ProjPE->GetNbinsX()+1;i++){Pred_I_ProjPE->SetBinContent(i,RNG->Poisson(Pred_I_Proj->GetBinContent(i)) );}   Pred_I_ProjPE->Scale(1.0/Pred_I_ProjPE->Integral());
-                    for(int i=0;i<Pred_T_ProjPE->GetNbinsX()+1;i++){Pred_T_ProjPE->SetBinContent(i,RNG->Poisson(Pred_T_Proj->GetBinContent(i)) );}   Pred_T_ProjPE->Scale(1.0/Pred_T_ProjPE->Integral());
+                    for(int i=0;i<Pred_I_ProjPE->GetNbinsX()+1;i++){Pred_I_ProjPE->SetBinContent(i,RNG->Poisson(Pred_I_Proj->GetBinContent(i)) );}   
+                    Pred_I_ProjPE->Scale(1.0/Pred_I_ProjPE->Integral());
+                    for(int i=0;i<Pred_T_ProjPE->GetNbinsX()+1;i++){Pred_T_ProjPE->SetBinContent(i,RNG->Poisson(Pred_T_Proj->GetBinContent(i)) );}   
+                    Pred_T_ProjPE->Scale(1.0/Pred_T_ProjPE->Integral());
 
                     //save the predP distribution
                     for(int x=0;x<=Pred_P_ProjPE->GetNbinsX()+1;x++){Pred_P->SetBinContent(CutIndex+1, x, Pred_P->GetBinContent(CutIndex+1, x) + Pred_P_ProjPE->GetBinContent(x) * PE_P);}; // overflow
 
                     double Proba, MI, MComb;//, MT=0, ProbaT=0;
                     for(int x=0;x<=Pred_P_ProjPE->GetNbinsX()+1;x++){    
-                        if(Pred_P_ProjPE->GetBinContent(x)<=0.0){continue;}  
-                        const double& p = (x<Pred_P_ProjPE->GetNbinsX()+1)?Pred_P_ProjPE->GetBinCenter(x):Pred_P_ProjPE->GetBinCenter(x+3); //overflow bin
-                        for(int y=0;y<Pred_I_ProjPE->GetNbinsX()+1;y++){    if(Pred_I_ProjPE->GetBinContent(y)<=0.0){continue;}  const double& i = Pred_I_ProjPE->GetBinCenter(y);
-                            Proba = Pred_P_ProjPE->GetBinContent(x) * Pred_I_ProjPE->GetBinContent(y);  if(Proba<=0 || isnan((float)Proba))continue;
+                        if(Pred_P_ProjPE->GetBinContent(x)<=0.0) continue; 
+                        //const double& p = (x<Pred_P_ProjPE->GetNbinsX()+1)?Pred_P_ProjPE->GetBinCenter(x):Pred_P_ProjPE->GetBinCenter(x+3); //overflow bin
+                        const double& p = Pred_P_ProjPE->GetBinCenter(x);
+                        for(int y=0;y<Pred_I_ProjPE->GetNbinsX()+1;y++){    
+                            if(Pred_I_ProjPE->GetBinContent(y)<=0.0) continue;
+                            const double& i = Pred_I_ProjPE->GetBinCenter(y);
+                            Proba = Pred_P_ProjPE->GetBinContent(x) * Pred_I_ProjPE->GetBinContent(y);  
+                            if(Proba<=0 || isnan((float)Proba)) continue;
                             //MI = GetMass(p,i, false);
                             MI = GetMass(p,i, dEdxK_MC, dEdxC_MC);
                             MComb = MI;
                             tmpH_Mass->Fill(MI,Proba);
+
 
                             //if(MI>500 && MI<800 && pe==0 && (CutIndex==3 || CutIndex==4)){printf("Index=%i p=%7.2f i=%7.2f M=%7.2f P=%7.5E( = %7.5E x %7.5E) --> %7.5E | %7.5E\n",CutIndex,p,i,MI,Proba,Pred_P_ProjPE->GetBinContent(x),Pred_I_ProjPE->GetBinContent(y),Pred_P_ProjPE->GetBinContent(x)*1,Pred_I_ProjPE->GetBinContent(y)*1);}
 
@@ -635,7 +654,21 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
                         if(isnan((float)(tmpH_Mass    ->GetBinContent(x) * PE_P))){printf("%f x %f\n",tmpH_Mass    ->GetBinContent(x), P /*PE_P*/); fflush(stdout);exit(0);}
                     }
             
-                    if (DirName.find("13TeV16G")==string::npos && is2016 && CutIndex == 4) {Pred_EtaPWeighted_PE->SaveAs("Pred_EtaPWeighted_PE.root");/* if (EtaPC) EtaPC->SaveAs("EtaPC.root");*/}
+                    //if (DirName.find("13TeV16G")==string::npos && is2016 && CutIndex == 4) {Pred_EtaPWeighted_PE->SaveAs("Pred_EtaPWeighted_PE.root");/* if (EtaPC) EtaPC->SaveAs("EtaPC.root");*/}
+                    if (CutIndex == 4) {
+                        TFile* ofileP = new TFile("fileP.root","RECREATE");
+                        ofileP->cd();
+
+                        Pred_EtaPWeighted_PE->ProjectionY()->Scale(1./Pred_EtaPWeighted_PE->Integral());
+                        Pred_EtaP_tosave->ProjectionY()->Scale(1./Pred_EtaP_tosave->Integral());
+                        Pred_P->ProjectionY("",4,4)->Scale(1./Pred_P->Integral());
+
+                        ofileP->Write();
+                        ofileP->Close();
+                        delete ofileP;
+                        //Pred_EtaPWeighted_PE->SaveAs("Pred_EtaPWeighted_PE.root");/* if (EtaPC) EtaPC->SaveAs("EtaPC.root");*/ 
+                        //Pred_EtaP_tosave->SaveAs("predetanoweight.root");
+                        }
                     //         delete EtaPC;
                     delete Pred_P_ProjPE;
                     delete tmpH_Mass;
@@ -800,7 +833,11 @@ void Analysis_Step2_BackgroundPrediction(TFile* InputFile, int TypeMode = 0)
             Pred_P->Scale(1.0/NPseudoExp);
 
 
+            obsMass->ProjectionY("_py",4,4)->Write();
+            Pred_Mass->ProjectionY("_py",4,4)->Write();
+
             //save histogram to file
+
             Pred_P       ->Write();
             H_P          ->Write();
             Pred_Mass    ->Write();

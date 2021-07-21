@@ -1,4 +1,12 @@
 tag v2.1
+    year: 2017B 
+    analysis: tk-only MET
+    analysis: tk+tof SingleMuon
+    triggers: OR 
+    complexity of ttree: all information stored 
+    comment: add informations useful for background prediction at Step2 
+
+tag v2.1
     year: 2017
     analysis: tk-only
     dataset: MET

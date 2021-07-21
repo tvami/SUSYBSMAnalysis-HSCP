@@ -394,6 +394,14 @@ void TupleMaker::initializeTuple(Tuple* &tuple, TFileDirectory &dir, unsigned in
          Name = "Pred_EtaS"; tuple->Pred_EtaS = dir.make<TH2D>(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins,-3,3); tuple->Pred_EtaS->Sumw2();
          Name = "Pred_EtaS2"; tuple->Pred_EtaS2 = dir.make<TH2D>(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins,-3,3); tuple->Pred_EtaS2->Sumw2();
          Name = "Pred_EtaP"; tuple->Pred_EtaP = dir.make<TH3D>(Name.c_str(), Name.c_str() ,NCuts,0,NCuts, EtaBins, -3, 3, 200,GlobalMinPt,PtHistoUpperBound); tuple->Pred_EtaP->Sumw2();
+         Name = "EtaP_regionA"; tuple->EtaP_regionA = dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, 0, 1000); tuple->EtaP_regionA->Sumw2();
+         Name = "EtaP_regionB"; tuple->EtaP_regionB = dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, 0, 1000); tuple->EtaP_regionB->Sumw2();
+         Name = "EtaP_regionC"; tuple->EtaP_regionC = dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, 0, 1000); tuple->EtaP_regionC->Sumw2();
+         Name = "EtaP_regionD"; tuple->EtaP_regionD = dir.make<TH3D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, EtaBins, -3, 3, 200, 0, 1000); tuple->EtaP_regionD->Sumw2();
+         Name = "Ih_regionA"; tuple->Ih_regionA = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim); tuple->Ih_regionA->Sumw2();
+         Name = "Ih_regionB"; tuple->Ih_regionB = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim); tuple->Ih_regionB->Sumw2();
+         Name = "Ih_regionC"; tuple->Ih_regionC = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim); tuple->Ih_regionC->Sumw2();
+         Name = "Ih_regionD"; tuple->Ih_regionD = dir.make<TH2D>(Name.c_str(), Name.c_str(), NCuts, 0, NCuts, 400, 0, dEdxM_UpLim); tuple->Ih_regionD->Sumw2();
          Name = "Pred_TOF"; tuple->Pred_TOF = dir.make<TH2D>(Name.c_str(), Name.c_str() ,NCuts,0,NCuts,   200,GlobalMinTOF,5); tuple->Pred_TOF->Sumw2();
          //pz
 
@@ -855,7 +863,7 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, 
 	 double Ih=0;	 if(dedxMObj) Ih=dedxMObj->dEdx();
 
          if(!isCosmicSB){
-	 tuple->Hist_Pt->Fill(track->pt(),Event_Weight);
+	     tuple->Hist_Pt->Fill(track->pt(),Event_Weight);
          tuple->Hist_Is->Fill(Is,Event_Weight);
          tuple->Hist_TOF->Fill(MuonTOF,Event_Weight);
          }
@@ -953,15 +961,19 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, 
                if(bin>-1 && bin<MaxPredBins) tuple->H_D_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
                tuple->RegionD_P  ->Fill(CutIndex,track->p(),     Event_Weight);
                tuple->RegionD_I  ->Fill(CutIndex,Ih,Event_Weight);
-	       tuple->RegionD_Ias->Fill(CutIndex,Is,Event_Weight);
+	           tuple->RegionD_Ias->Fill(CutIndex,Is,Event_Weight);
                tuple->RegionD_TOF->Fill(CutIndex,MuonTOF,        Event_Weight);
-	       tuple->AS_Eta_RegionD->Fill(CutIndex,track->eta());
+	           tuple->AS_Eta_RegionD->Fill(CutIndex,track->eta());
+               tuple->EtaP_regionD->Fill(CutIndex, track->p(), track->eta(), Event_Weight);
+               tuple->Ih_regionD->Fill(CutIndex, Ih, Event_Weight);
             }else if( PassTOFCut &&  PassPtCut && !PassICut){   //Region C
                tuple->H_C     ->Fill(CutIndex,                 Event_Weight);
                if(TypeMode<2)tuple->Pred_EtaP  ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight);
                tuple->PDF_C_EtaP ->Fill(CutIndex,track->eta(), track->p(),     Event_Weight); //pz
                //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
                tuple->AS_Eta_RegionC->Fill(CutIndex,track->eta());
+               tuple->EtaP_regionC->Fill(CutIndex, track->p(), track->eta(), Event_Weight);
+               tuple->Ih_regionC->Fill(CutIndex, Ih, Event_Weight);
             }else if( PassTOFCut && !PassPtCut &&  PassICut){   //Region B
                tuple->H_B     ->Fill(CutIndex,                 Event_Weight);
                if(bin>-1 && bin<MaxPredBins) tuple->H_B_Binned[to_string(bin)]->Fill(CutIndex,                Event_Weight);
@@ -970,13 +982,19 @@ void TupleMaker::fillControlAndPredictionHist(const susybsm::HSCParticle& hscp, 
 	       tuple->PDF_B_EtaICK ->Fill(CutIndex,track->eta(),Ick, Event_Weight); //pz
                //Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
                tuple->AS_Eta_RegionB->Fill(CutIndex,track->eta());
+               tuple->EtaP_regionB->Fill(CutIndex, track->p(), track->eta(), Event_Weight);
+               tuple->Ih_regionB->Fill(CutIndex, Ih, Event_Weight);
+
             }else if( PassTOFCut && !PassPtCut && !PassICut){   //Region A
                tuple->H_A     ->Fill(CutIndex,                 Event_Weight);
                if(TypeMode==2)tuple->Pred_TOF->Fill(CutIndex,MuonTOF,         Event_Weight);
                if(TypeMode<2)tuple->Pred_EtaB->Fill(CutIndex,track->eta(),         Event_Weight);
                if(TypeMode==2)tuple->Pred_EtaS2->Fill(CutIndex,track->eta(),        Event_Weight);
                tuple->AS_Eta_RegionA->Fill(CutIndex,track->eta());
-	       tuple->PDF_A_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
+	           tuple->PDF_A_Eta->Fill(CutIndex,track->eta(),        Event_Weight);//pz
+               tuple->EtaP_regionA->Fill(CutIndex, track->p(), track->eta(), Event_Weight);
+               tuple->Ih_regionA->Fill(CutIndex, Ih, Event_Weight);
+
 
             }else if(!PassTOFCut &&  PassPtCut &&  PassICut){   //Region H
                tuple->H_H   ->Fill(CutIndex,          Event_Weight);

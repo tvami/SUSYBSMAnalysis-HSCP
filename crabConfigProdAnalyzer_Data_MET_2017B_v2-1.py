@@ -1,7 +1,7 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-config.General.requestName = 'Analysis_MET_UL2017B'
+config.General.requestName = 'Analysis_MET_UL2017B_testReplica'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 
@@ -25,6 +25,7 @@ else:
     #config.Data.unitsPerJob = 1 #20
     config.Data.splitting = 'FileBased'
     config.Data.unitsPerJob = 1
+    config.JobType.maxMemoryMB = 4000
 
     #config.Data.lumiMask = 'https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions17/13TeV/Legacy_2017/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt'
     config.Data.lumiMask = '/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/Legacy_2017/Cert_294927-306462_13TeV_UL2017_Collisions17_GoldenJSON.txt'

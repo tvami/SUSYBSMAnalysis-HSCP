@@ -358,6 +358,14 @@ struct Tuple {
   TH2D*  Pred_EtaB;
   TH2D*  Pred_EtaS;
   TH2D*  Pred_EtaS2;
+  TH3D*  EtaP_regionA;
+  TH3D*  EtaP_regionB;
+  TH3D*  EtaP_regionC;
+  TH3D*  EtaP_regionD;
+  TH2D*  Ih_regionA;
+  TH2D*  Ih_regionB;
+  TH2D*  Ih_regionC;
+  TH2D*  Ih_regionD;
 
   //pz
 
