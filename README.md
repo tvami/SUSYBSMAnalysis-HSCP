@@ -12,9 +12,22 @@ cmsenv
 For the following step you should have a ssh key associated to your GitHub account.
 For more information, see [connecting-to-github-with-ssh-key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
 
+If you know that you'll be annoyed by dozens of msgs from Lumi Reweighting do this first, but this is not really needed
 ```bash
-git clone -b master git@github.com:CMS-HSCP/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
+git cms-addpkg PhysicsTools/Utilities
 ```
+
+```bash
+git clone -b master git@github.com:CMS-HSCP/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis
+# or your user version like
+# git clone -b master git@github.com:tvami/SUSYBSMAnalysis-HSCP.git SUSYBSMAnalysis 
+```
+
+Again the following step can be ommited, it only reduces the msgs from Lumi Rew package
+```bash
+cp SUSYBSMAnalysis/Analyzer/test/Tamas/LumiReweightingStandAlone.h PhysicsTools/Utilities/interface/.
+```
+
 
 To compile the code, run
 ```bash
@@ -30,7 +43,14 @@ cp SUSYBSMAnalysis/Analyzer/test/Tamas/HSCParticleProducerAnalyzer_2018_mc_cfg.p
 cp SUSYBSMAnalysis/Analyzer/test/Tamas/HSCParticleProducerAnalyzer_2018_SignalMC_cfg.py .
 ```
 
-**Customize to you
+For local running copy some if the inputs
+
+```bash
+cp SUSYBSMAnalysis/HSCP/data/MuonTimeOffset.txt .
+cp SUSYBSMAnalysis/HSCP/data/template_2018MC_v5.root . #or any other template you need
+```
+
+**Customize to you**
 ```bash
 sed -i  's/tvami/<yourUserName>\ ./g' submitCrabJobs*
 # make sure you have a site to write to:  `crab checkwrite --site=<yourTierTwoSite>`. 
